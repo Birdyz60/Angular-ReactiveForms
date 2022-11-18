@@ -48,6 +48,8 @@ export class CustomerComponent implements OnInit {
       rating: [null, ratingRange(1, 5)],
       sendCatalog: true
     });
+    this.customerForm.get('notification')?.valueChanges
+      .subscribe(value => this.setNotification(value));
   }
 
   save() {
@@ -62,7 +64,6 @@ export class CustomerComponent implements OnInit {
       email: 'jack@torchwood.com',
       sendCatalog: false
     });
-    //console.log(this.customerForm.get('email')?.errors);
   }
 
   setNotification(notifyVia: string): void {
