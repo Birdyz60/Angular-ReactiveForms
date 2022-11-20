@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, AbstractControlOptions, FormArray, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { Customer } from './customer';
 
@@ -35,6 +35,10 @@ export class CustomerComponent implements OnInit {
   customer = new Customer();
   emailMessage!: string;
 
+  get addresses(): FormArray {
+    return <FormArray>this.customerForm.get('addresses');
+  }
+
   private validationMessages = {
     required: 'Please enter your email address.',
     email: 'Please enter a valid email address.'
@@ -49,11 +53,12 @@ export class CustomerComponent implements OnInit {
       emailGroup: this.formBuilder.group({
         email: ['', [Validators.required, Validators.email]],
         confirmEmail: ['', Validators.required]
-      }, { validator: emailMatcher }),
+      }, { validator: emailMatcher } as AbstractControlOptions /* CF https://stackoverflow.com/questions/65594627/angular-formbuilder-group-is-deprecated */),
       phone: [''],
       notification: ['email'],
       rating: [null, ratingRange(1, 5)],
-      sendCatalog: true
+      sendCatalog: false,
+      addresses: this.formBuilder.array([this.buildAddress()])
     });
     this.customerForm.get('notification')?.valueChanges
       .subscribe(value => this.setNotification(value));
@@ -66,6 +71,17 @@ export class CustomerComponent implements OnInit {
         this.setMessage(emailControl);
       }
     );
+  }
+
+  private buildAddress(): FormGroup {
+    return this.formBuilder.group({
+      addressType: 'home',
+      street1: '',
+      street2: '',
+      city: '',
+      state: '',
+      zip: ''
+    });
   }
 
   save() {
@@ -101,5 +117,9 @@ export class CustomerComponent implements OnInit {
         // CF https://bobbyhadz.com/blog/typescript-element-implicitly-has-any-type-expression#:~:text=The%20error%20%22Element%20implicitly%20has,one%20of%20the%20object's%20keys.
         key => this.validationMessages[key as keyof typeof this.validationMessages]).join(' ');
     }
+  }
+
+  addAddress(): void {
+    this.addresses.push(this.buildAddress());
   }
 }
